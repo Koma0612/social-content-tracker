@@ -1,0 +1,19 @@
+node_modules/
+dist/
+build/
+
+# SQLite 数据库文件（本地数据，不进仓库）
+backend/data/*.db
+backend/data/*.db-journal
+backend/data/*.db-wal
+backend/data/*.db-shm
+
+# 环境变量
+.env
+.env.local
+
+# 系统/编辑器
+.DS_Store
+*.log
+.vscode/
+.idea/
