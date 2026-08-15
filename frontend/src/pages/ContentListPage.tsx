@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import { fetchContents, ContentFilter } from '../api/client';
-import { ContentRecord } from '../types';
+import { ContentWithBlockInfo } from '../types';
 import FilterBar from '../components/FilterBar';
 
-export default function ContentListPage() {
+interface ContentListPageProps {
+  onSelectContent: (id: number) => void;
+}
+
+export default function ContentListPage({ onSelectContent }: ContentListPageProps) {
   const [filter, setFilter] = useState<ContentFilter>({});
-  const [contents, setContents] = useState<ContentRecord[]>([]);
+  const [contents, setContents] = useState<ContentWithBlockInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,22 +62,36 @@ export default function ContentListPage() {
                 <th>选题</th>
                 <th>平台</th>
                 <th>当前状态</th>
+                <th>停留天数</th>
                 <th>负责人</th>
                 <th>计划发布日期</th>
                 <th>内容类型</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {contents.map((c) => (
-                <tr key={c.id}>
+                <tr key={c.id} className={c.is_blocked ? 'row-blocked' : undefined}>
                   <td>{c.topic}</td>
                   <td>{c.platform}</td>
                   <td>
                     <span className="status-pill">{c.current_status}</span>
                   </td>
+                  <td>
+                    {c.is_blocked ? (
+                      <span className="blocked-tag">{c.blocked_days} 天(阻塞)</span>
+                    ) : (
+                      `${c.blocked_days} 天`
+                    )}
+                  </td>
                   <td>{c.owner ?? '—'}</td>
                   <td>{c.planned_publish_date ?? '—'}</td>
                   <td>{c.content_type ?? '—'}</td>
+                  <td>
+                    <button className="btn-link" onClick={() => onSelectContent(c.id)}>
+                      查看详情
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

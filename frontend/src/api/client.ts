@@ -1,4 +1,4 @@
-import { ContentRecord } from '../types';
+import { ContentRecord, ContentStatus, ContentWithBlockInfo, StatusHistoryRecord } from '../types';
 
 const API_BASE = '/api';
 
@@ -20,7 +20,7 @@ export interface ContentFilter {
   content_type?: string;
 }
 
-export async function fetchContents(filter: ContentFilter = {}): Promise<ContentRecord[]> {
+export async function fetchContents(filter: ContentFilter = {}): Promise<ContentWithBlockInfo[]> {
   const params = new URLSearchParams();
   Object.entries(filter).forEach(([key, value]) => {
     if (value) params.set(key, value);
@@ -29,6 +29,45 @@ export async function fetchContents(filter: ContentFilter = {}): Promise<Content
 
   const res = await fetch(`${API_BASE}/contents${qs ? `?${qs}` : ''}`);
   if (!res.ok) throw new Error(`获取内容列表失败: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchContentById(id: number): Promise<ContentWithBlockInfo> {
+  const res = await fetch(`${API_BASE}/contents/${id}`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? `获取内容详情失败: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function fetchContentHistory(id: number): Promise<StatusHistoryRecord[]> {
+  const res = await fetch(`${API_BASE}/contents/${id}/history`);
+  if (!res.ok) throw new Error(`获取状态历史失败: ${res.status}`);
+  return res.json();
+}
+
+export interface TransitionInput {
+  to_status: ContentStatus;
+  changed_by?: string;
+  new_owner?: string;
+}
+
+export async function transitionContentStatus(
+  id: number,
+  input: TransitionInput,
+): Promise<ContentWithBlockInfo> {
+  const res = await fetch(`${API_BASE}/contents/${id}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? `状态变更失败: ${res.status}`);
+  }
+
   return res.json();
 }
 
