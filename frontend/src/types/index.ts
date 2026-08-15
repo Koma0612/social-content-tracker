@@ -76,3 +76,36 @@ export interface ReviewRecord {
 export interface ReviewWithReasons extends ReviewRecord {
   reject_reasons: RejectReason[];
 }
+
+export interface BlockedSummary {
+  total_blocked: number;
+  by_status: { status: ContentStatus; count: number }[];
+}
+
+export interface ContentGoalPerformance {
+  content_goal: string;
+  count: number;
+  avg_impressions: number | null;
+  avg_engagement: number | null;
+  avg_dm_count: number | null;
+  avg_new_followers: number | null;
+}
+
+export interface RejectReasonCount {
+  reason: RejectReason;
+  count: number;
+}
+
+export interface PublishRhythm {
+  platform: string;
+  planned_count: number;
+  published_count: number;
+}
+
+export interface DashboardStats {
+  blocked_summary: BlockedSummary;
+  content_goal_performance: ContentGoalPerformance[];
+  avg_review_rounds: number | null;
+  reject_reason_distribution: RejectReasonCount[];
+  publish_rhythm: PublishRhythm[];
+}

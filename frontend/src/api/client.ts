@@ -7,6 +7,7 @@ import {
   ReviewResult,
   RejectReason,
   ReviewWithReasons,
+  DashboardStats,
 } from '../types';
 
 const API_BASE = '/api';
@@ -110,6 +111,12 @@ export async function submitReview(
     throw new Error(body?.error ?? `提交审核失败: ${res.status}`);
   }
 
+  return res.json();
+}
+
+export async function fetchDashboardStats(): Promise<DashboardStats> {
+  const res = await fetch(`${API_BASE}/dashboard`);
+  if (!res.ok) throw new Error(`获取看板数据失败: ${res.status}`);
   return res.json();
 }
 
