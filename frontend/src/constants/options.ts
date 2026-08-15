@@ -34,3 +34,16 @@ export const CONTENT_STATUSES = [
   '排期',
   '发布',
 ] as const;
+
+export const REVIEWER_ROLES = ['老板', '同事/mentor', '英语母语者'] as const;
+
+export const REJECT_REASONS = [
+  '语言准确性',
+  '本地化表达',
+  '受众适配',
+  '视听呈现',
+  '内容结构',
+] as const;
+
+// 允许提交审核记录的状态，与 backend/src/types/index.ts 的 REVIEWABLE_STATUSES 保持一致
+export const REVIEWABLE_STATUSES = ['写文案', '制作', '审核'] as const;

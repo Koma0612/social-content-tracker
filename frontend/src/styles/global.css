@@ -430,3 +430,71 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* 审核表单 */
+.review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 480px;
+}
+
+.review-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.review-form input,
+.review-form select,
+.review-form textarea {
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.review-form button {
+  align-self: flex-start;
+}
+
+.reason-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.checkbox-item {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #374151;
+}
+
+/* 审核历史 */
+.review-item {
+  flex-direction: column;
+  align-items: flex-start !important;
+  gap: 6px !important;
+}
+
+.review-reasons {
+  color: #b91c1c;
+  font-size: 12px;
+}
+
+.review-comment {
+  color: #374151;
+  font-size: 13px;
+}

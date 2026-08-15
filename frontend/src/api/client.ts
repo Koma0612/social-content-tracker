@@ -1,4 +1,13 @@
-import { ContentRecord, ContentStatus, ContentWithBlockInfo, StatusHistoryRecord } from '../types';
+import {
+  ContentRecord,
+  ContentStatus,
+  ContentWithBlockInfo,
+  StatusHistoryRecord,
+  ReviewerRole,
+  ReviewResult,
+  RejectReason,
+  ReviewWithReasons,
+} from '../types';
 
 const API_BASE = '/api';
 
@@ -66,6 +75,39 @@ export async function transitionContentStatus(
   if (!res.ok) {
     const body = await res.json().catch(() => null);
     throw new Error(body?.error ?? `状态变更失败: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function fetchReviews(contentId: number): Promise<ReviewWithReasons[]> {
+  const res = await fetch(`${API_BASE}/contents/${contentId}/reviews`);
+  if (!res.ok) throw new Error(`获取审核记录失败: ${res.status}`);
+  return res.json();
+}
+
+export interface SubmitReviewInput {
+  reviewer_role: ReviewerRole;
+  reviewer_name?: string;
+  result: ReviewResult;
+  comment?: string;
+  reject_reasons?: RejectReason[];
+  rollback_to_status?: ContentStatus;
+}
+
+export async function submitReview(
+  contentId: number,
+  input: SubmitReviewInput,
+): Promise<ReviewWithReasons> {
+  const res = await fetch(`${API_BASE}/contents/${contentId}/reviews`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? `提交审核失败: ${res.status}`);
   }
 
   return res.json();

@@ -34,3 +34,12 @@ export function getStatusOptions(current: ContentStatus): StatusOption[] {
 
   return forward;
 }
+
+/**
+ * 只处于"审核"状态、且审核结果选了"打回"时，才需要选退回目标。
+ * 复用 getStatusOptions，只挑出"审核回退"类型的选项。
+ */
+export function getRollbackOptions(current: ContentStatus): StatusOption[] {
+  if (current !== '审核') return [];
+  return getStatusOptions(current).filter((opt) => opt.type === '审核回退');
+}

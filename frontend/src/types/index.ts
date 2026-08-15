@@ -57,3 +57,22 @@ export interface StatusHistoryRecord {
   changed_by: string | null;
   changed_at: string;
 }
+
+export type ReviewerRole = '老板' | '同事/mentor' | '英语母语者';
+export type ReviewResult = '通过' | '打回';
+export type RejectReason = '语言准确性' | '本地化表达' | '受众适配' | '视听呈现' | '内容结构';
+
+export interface ReviewRecord {
+  id: number;
+  content_id: number;
+  reviewer_role: ReviewerRole;
+  reviewer_name: string | null;
+  round_number: number;
+  result: ReviewResult;
+  comment: string | null;
+  reviewed_at: string;
+}
+
+export interface ReviewWithReasons extends ReviewRecord {
+  reject_reasons: RejectReason[];
+}
