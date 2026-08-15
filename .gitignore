@@ -17,3 +17,6 @@ backend/data/*.db-shm
 *.log
 .vscode/
 .idea/
+
+# Claude Code 本地配置(与项目代码无关)
+.claude/
