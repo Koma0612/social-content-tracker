@@ -83,3 +83,122 @@ body {
   color: #6b7280;
   line-height: 1.6;
 }
+
+/* 页面切换 tab */
+.tab-nav {
+  display: flex;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.tab {
+  padding: 8px 16px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #374151;
+}
+
+.tab.active {
+  background: #1f2937;
+  border-color: #1f2937;
+  color: #fff;
+}
+
+/* 录入表单 */
+.form-page {
+  margin-top: 16px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.form-page h2 {
+  margin-top: 0;
+  font-size: 16px;
+}
+
+.content-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.content-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.form-full {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.content-form input,
+.content-form select,
+.content-form textarea {
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.required {
+  color: #dc2626;
+}
+
+.content-form button {
+  align-self: flex-start;
+  padding: 10px 24px;
+  background: #1f2937;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.content-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.banner {
+  margin-top: 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.banner-success {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.banner-error {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+@media (max-width: 560px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}

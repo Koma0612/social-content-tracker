@@ -1,21 +1,12 @@
-import { useEffect, useState } from 'react';
-import { getHealth, fetchContents } from './api/client';
+import { useState } from 'react';
+import ContentFormPage from './pages/ContentFormPage';
 
-type ConnectionState = 'checking' | 'ok' | 'error';
+// 页面还少，先用最简单的状态切换代替路由库(react-router-dom 当前有安全漏洞，
+// 等阶段三/四页面变多、需要独立网址时再评估要不要引入)。
+type Tab = 'form' | 'list';
 
 export default function App() {
-  const [connection, setConnection] = useState<ConnectionState>('checking');
-  const [contentCount, setContentCount] = useState<number | null>(null);
-
-  useEffect(() => {
-    getHealth()
-      .then(() => setConnection('ok'))
-      .catch(() => setConnection('error'));
-
-    fetchContents()
-      .then((rows) => setContentCount(rows.length))
-      .catch(() => setContentCount(null));
-  }, []);
+  const [tab, setTab] = useState<Tab>('form');
 
   return (
     <div className="page">
@@ -24,27 +15,21 @@ export default function App() {
         <p className="subtitle">Social Content Workflow &amp; Performance Tracker</p>
       </header>
 
-      <section className="status-card">
-        <h2>阶段一：项目骨架验证</h2>
-        <ul>
-          <li>
-            后端连接状态：
-            {connection === 'checking' && <span className="badge badge-checking">检查中…</span>}
-            {connection === 'ok' && <span className="badge badge-ok">已连接</span>}
-            {connection === 'error' && <span className="badge badge-error">连接失败</span>}
-          </li>
-          <li>
-            数据库中现有内容条数：
-            <span className="badge badge-neutral">
-              {contentCount === null ? '未知' : contentCount}
-            </span>
-          </li>
-        </ul>
-        <p className="hint">
-          这个页面只是用来证明"前端 → 后端 → 数据库"这条链路是通的。
-          正式的录入表单、列表筛选会在阶段二加上。
-        </p>
-      </section>
+      <nav className="tab-nav">
+        <button className={tab === 'form' ? 'tab active' : 'tab'} onClick={() => setTab('form')}>
+          录入内容
+        </button>
+        <button className={tab === 'list' ? 'tab active' : 'tab'} onClick={() => setTab('list')}>
+          内容列表
+        </button>
+      </nav>
+
+      {tab === 'form' && <ContentFormPage />}
+      {tab === 'list' && (
+        <div className="status-card">
+          <p className="hint">列表 + 筛选功能在下一次 commit（阶段二后半段）实现。</p>
+        </div>
+      )}
     </div>
   );
 }
