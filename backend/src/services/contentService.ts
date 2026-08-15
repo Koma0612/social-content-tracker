@@ -1,5 +1,6 @@
 import { db } from '../db/connection';
-import { ContentRecord, ContentStatus } from '../types';
+import { ContentRecord, ContentStatus, ContentWithBlockInfo } from '../types';
+import { attachBlockInfo } from './statusService';
 
 export interface ContentFilter {
   platform?: string;
@@ -11,8 +12,9 @@ export interface ContentFilter {
 /**
  * 按条件筛选内容列表。所有条件都是可选的,不传就是查全部。
  * 用具名参数(@platform 等)拼 SQL,better-sqlite3 会自动做参数转义,避免 SQL 注入。
+ * 返回的每一行都附带阻塞天数(blocked_days / is_blocked),供列表页直接展示。
  */
-export function listContents(filter: ContentFilter = {}): ContentRecord[] {
+export function listContents(filter: ContentFilter = {}): ContentWithBlockInfo[] {
   const conditions: string[] = [];
   const params: Record<string, string> = {};
 
@@ -34,9 +36,18 @@ export function listContents(filter: ContentFilter = {}): ContentRecord[] {
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-  return db
+  const rows = db
     .prepare(`SELECT * FROM contents ${where} ORDER BY id DESC`)
     .all(params) as ContentRecord[];
+
+  return rows.map(attachBlockInfo);
+}
+
+export function getContentById(id: number): ContentWithBlockInfo | undefined {
+  const row = db.prepare('SELECT * FROM contents WHERE id = ?').get(id) as
+    | ContentRecord
+    | undefined;
+  return row ? attachBlockInfo(row) : undefined;
 }
 
 export interface CreateContentInput {
@@ -73,8 +84,8 @@ const insertContentStmt = db.prepare(`
 `);
 
 const insertHistoryStmt = db.prepare(`
-  INSERT INTO status_history (content_id, from_status, to_status, changed_by, changed_at)
-  VALUES (?, NULL, ?, ?, datetime('now'))
+  INSERT INTO status_history (content_id, from_status, to_status, transition_type, changed_by, changed_at)
+  VALUES (?, NULL, ?, '正常推进', ?, datetime('now'))
 `);
 
 const getByIdStmt = db.prepare('SELECT * FROM contents WHERE id = ?');

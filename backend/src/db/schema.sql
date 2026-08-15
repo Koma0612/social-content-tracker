@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS status_history (
   content_id INTEGER NOT NULL REFERENCES contents(id) ON DELETE CASCADE,
   from_status TEXT,
   to_status TEXT NOT NULL,
+  transition_type TEXT NOT NULL DEFAULT '正常推进', -- 正常推进 / 审核回退，看板用它统计"打回主要退到哪个环节"
   changed_by TEXT, -- 操作人：追踪是谁推进了这个环节
   changed_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

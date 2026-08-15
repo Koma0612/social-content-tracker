@@ -72,13 +72,21 @@ export interface ContentRecord {
   updated_at: string;
 }
 
+export type TransitionType = '正常推进' | '审核回退';
+
 export interface StatusHistoryRecord {
   id: number;
   content_id: number;
   from_status: ContentStatus | null;
   to_status: ContentStatus;
+  transition_type: TransitionType;
   changed_by: string | null;
   changed_at: string;
+}
+
+export interface ContentWithBlockInfo extends ContentRecord {
+  blocked_days: number;
+  is_blocked: boolean;
 }
 
 export interface ReviewRecord {

@@ -1,10 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { migrate } from './db/migrate';
 import contentsRouter from './routes/contents';
-
-// 启动时先确保表结构存在
-migrate();
 
 const app = express();
 app.use(cors());
