@@ -6,6 +6,7 @@ import {
   getContentHistory,
   transitionContentStatus,
 } from '../controllers/contentController';
+import { createReview, listReviews } from '../controllers/reviewController';
 
 const router = Router();
 
@@ -14,5 +15,7 @@ router.post('/', createContent);
 router.get('/:id', getContent);
 router.get('/:id/history', getContentHistory);
 router.patch('/:id/status', transitionContentStatus);
+router.get('/:id/reviews', listReviews);
+router.post('/:id/reviews', createReview);
 
 export default router;

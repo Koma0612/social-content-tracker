@@ -93,11 +93,16 @@ export interface ReviewRecord {
   id: number;
   content_id: number;
   reviewer_role: ReviewerRole;
+  reviewer_name: string | null;
   round_number: number;
   result: ReviewResult;
   comment: string | null;
   reviewed_at: string;
 }
+
+// 允许提交审核记录的状态：语言审核(英语母语者)经常在文案/制作阶段就先审一遍，
+// 不一定非要等到"审核"环节。只有处于"审核"状态时，打回才会触发状态回退。
+export const REVIEWABLE_STATUSES: ContentStatus[] = ['写文案', '制作', '审核'];
 
 export interface ReviewWithReasons extends ReviewRecord {
   reject_reasons: RejectReason[];

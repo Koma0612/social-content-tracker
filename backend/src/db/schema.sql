@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS reviews (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   content_id INTEGER NOT NULL REFERENCES contents(id) ON DELETE CASCADE,
   reviewer_role TEXT NOT NULL, -- 老板 / 同事mentor / 英语母语者
+  reviewer_name TEXT, -- 审核人姓名：角色只有三类，但同一角色可能是不同的人，需要区分是谁提的意见
   round_number INTEGER NOT NULL,
   result TEXT NOT NULL, -- 通过 / 打回
   comment TEXT,
