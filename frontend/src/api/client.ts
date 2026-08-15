@@ -13,8 +13,21 @@ export async function getHealth(): Promise<HealthResponse> {
   return res.json();
 }
 
-export async function fetchContents(): Promise<ContentRecord[]> {
-  const res = await fetch(`${API_BASE}/contents`);
+export interface ContentFilter {
+  platform?: string;
+  status?: string;
+  owner?: string;
+  content_type?: string;
+}
+
+export async function fetchContents(filter: ContentFilter = {}): Promise<ContentRecord[]> {
+  const params = new URLSearchParams();
+  Object.entries(filter).forEach(([key, value]) => {
+    if (value) params.set(key, value);
+  });
+  const qs = params.toString();
+
+  const res = await fetch(`${API_BASE}/contents${qs ? `?${qs}` : ''}`);
   if (!res.ok) throw new Error(`获取内容列表失败: ${res.status}`);
   return res.json();
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ContentFormPage from './pages/ContentFormPage';
+import ContentListPage from './pages/ContentListPage';
 
 // 页面还少，先用最简单的状态切换代替路由库(react-router-dom 当前有安全漏洞，
 // 等阶段三/四页面变多、需要独立网址时再评估要不要引入)。
@@ -25,11 +26,7 @@ export default function App() {
       </nav>
 
       {tab === 'form' && <ContentFormPage />}
-      {tab === 'list' && (
-        <div className="status-card">
-          <p className="hint">列表 + 筛选功能在下一次 commit（阶段二后半段）实现。</p>
-        </div>
-      )}
+      {tab === 'list' && <ContentListPage />}
     </div>
   );
 }

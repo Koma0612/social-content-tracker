@@ -1,6 +1,44 @@
 import { db } from '../db/connection';
 import { ContentRecord, ContentStatus } from '../types';
 
+export interface ContentFilter {
+  platform?: string;
+  status?: ContentStatus;
+  owner?: string; // 模糊匹配,负责人是自由文本字段,没有固定枚举
+  content_type?: string;
+}
+
+/**
+ * 按条件筛选内容列表。所有条件都是可选的,不传就是查全部。
+ * 用具名参数(@platform 等)拼 SQL,better-sqlite3 会自动做参数转义,避免 SQL 注入。
+ */
+export function listContents(filter: ContentFilter = {}): ContentRecord[] {
+  const conditions: string[] = [];
+  const params: Record<string, string> = {};
+
+  if (filter.platform) {
+    conditions.push('platform = @platform');
+    params.platform = filter.platform;
+  }
+  if (filter.status) {
+    conditions.push('current_status = @status');
+    params.status = filter.status;
+  }
+  if (filter.owner) {
+    conditions.push('owner LIKE @owner');
+    params.owner = `%${filter.owner}%`;
+  }
+  if (filter.content_type) {
+    conditions.push('content_type = @content_type');
+    params.content_type = filter.content_type;
+  }
+
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  return db
+    .prepare(`SELECT * FROM contents ${where} ORDER BY id DESC`)
+    .all(params) as ContentRecord[];
+}
+
 export interface CreateContentInput {
   planned_publish_date?: string | null;
   platform: string;

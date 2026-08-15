@@ -1,16 +1,21 @@
 import { Request, Response } from 'express';
-import { db } from '../db/connection';
-import { ContentRecord } from '../types';
+import { ContentStatus } from '../types';
 import * as contentService from '../services/contentService';
 
 /**
- * 阶段一占位实现：先证明"接口 -> 数据库"这条链路是通的。
- * 真正的筛选参数在阶段二后半段（列表 + 筛选）补上。
+ * 查询内容列表，支持按 platform / status / owner / content_type 筛选，
+ * 都是可选的 query 参数，不传就是查全部。
  */
-export function listContents(_req: Request, res: Response): void {
-  const rows = db
-    .prepare('SELECT * FROM contents ORDER BY id DESC')
-    .all() as ContentRecord[];
+export function listContents(req: Request, res: Response): void {
+  const { platform, status, owner, content_type } = req.query;
+
+  const filter: contentService.ContentFilter = {};
+  if (typeof platform === 'string' && platform) filter.platform = platform;
+  if (typeof status === 'string' && status) filter.status = status as ContentStatus;
+  if (typeof owner === 'string' && owner) filter.owner = owner;
+  if (typeof content_type === 'string' && content_type) filter.content_type = content_type;
+
+  const rows = contentService.listContents(filter);
   res.json(rows);
 }
 
