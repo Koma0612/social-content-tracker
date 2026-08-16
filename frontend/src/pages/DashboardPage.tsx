@@ -296,31 +296,21 @@ export default function DashboardPage() {
 
       <section className="dashboard-section">
         <h3>发布节奏(按平台)</h3>
+        <p className="hint">条形宽度代表"已发布数 ÷ 内容总数"的完成率，数字部分是具体条数。</p>
         {stats.publish_rhythm.length === 0 ? (
           <p className="hint">还没有内容数据。</p>
         ) : (
-          <div className="table-wrap">
-            <table className="content-table">
-              <thead>
-                <tr>
-                  <th>平台</th>
-                  <th>内容总数</th>
-                  <th>已发布数</th>
-                  <th>发布率</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.publish_rhythm.map((p) => (
-                  <tr key={p.platform}>
-                    <td>{p.platform}</td>
-                    <td>{p.planned_count}</td>
-                    <td>{p.published_count}</td>
-                    <td>{Math.round((p.published_count / p.planned_count) * 100)}%</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <BarList
+            max={100}
+            items={stats.publish_rhythm.map((p) => {
+              const rate = Math.round((p.published_count / p.planned_count) * 100);
+              return {
+                label: p.platform,
+                value: rate,
+                displayValue: `${p.published_count}/${p.planned_count} · ${rate}%`,
+              };
+            })}
+          />
         )}
       </section>
 
@@ -336,58 +326,31 @@ export default function DashboardPage() {
         {stats.material_wait.completed.length === 0 ? (
           <p className="hint">还没有已经结束的"收集素材"等待记录。</p>
         ) : (
-          <div className="table-wrap">
-            <table className="content-table">
-              <thead>
-                <tr>
-                  <th>素材来源</th>
-                  <th>样本数</th>
-                  <th>平均等待天数</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.material_wait.completed.map((c) => {
-                  const lowSample = c.sample_size < MIN_RELIABLE_SAMPLE_SIZE;
-                  return (
-                    <tr key={c.material_source} className={lowSample ? 'row-low-sample' : undefined}>
-                      <td>{c.material_source}</td>
-                      <td>
-                        n={c.sample_size}
-                        {lowSample && <span className="sample-warning">数据不足，仅供参考</span>}
-                      </td>
-                      <td>{c.avg_wait_days ?? '—'} 天</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <BarList
+            items={stats.material_wait.completed.map((c) => {
+              const lowSample = c.sample_size < MIN_RELIABLE_SAMPLE_SIZE;
+              return {
+                label: c.material_source,
+                value: c.avg_wait_days ?? 0,
+                displayValue: `${c.avg_wait_days ?? '—'}天 · n=${c.sample_size}${lowSample ? '(数据不足)' : ''}`,
+                warning: lowSample,
+              };
+            })}
+          />
         )}
 
         <h4 className="dashboard-subheading">进行中等待</h4>
         {stats.material_wait.ongoing.length === 0 ? (
           <p className="hint">目前没有内容正卡在"收集素材"环节。</p>
         ) : (
-          <div className="table-wrap">
-            <table className="content-table">
-              <thead>
-                <tr>
-                  <th>素材来源</th>
-                  <th>当前等待条数</th>
-                  <th>最长已等天数</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.material_wait.ongoing.map((o) => (
-                  <tr key={o.material_source} className={o.max_wait_days >= 3 ? 'row-blocked' : undefined}>
-                    <td>{o.material_source}</td>
-                    <td>{o.ongoing_count}</td>
-                    <td>{o.max_wait_days} 天</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <BarList
+            items={stats.material_wait.ongoing.map((o) => ({
+              label: o.material_source,
+              value: o.max_wait_days,
+              displayValue: `最长${o.max_wait_days}天 · 当前${o.ongoing_count}条`,
+              warning: o.max_wait_days >= 3,
+            }))}
+          />
         )}
       </section>
     </div>

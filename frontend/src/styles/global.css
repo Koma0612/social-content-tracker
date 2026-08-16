@@ -706,7 +706,7 @@ body {
 
 .bar-row {
   display: grid;
-  grid-template-columns: 90px 1fr 32px;
+  grid-template-columns: 110px 1fr auto;
   align-items: center;
   gap: var(--space-3);
   font-size: var(--text-sm);
@@ -732,10 +732,15 @@ body {
   border-radius: var(--radius-full);
 }
 
+.bar-fill-warning {
+  background: var(--color-warning);
+}
+
 .bar-value {
   text-align: right;
   color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .dashboard-page code {
@@ -773,6 +778,6 @@ body {
   }
 
   .bar-row {
-    grid-template-columns: 70px 1fr 28px;
+    grid-template-columns: 80px 1fr auto;
   }
 }
