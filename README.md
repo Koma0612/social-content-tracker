@@ -129,47 +129,7 @@
 
 ---
 
-## 三、技术栈
-
-- 前端:React 18 + TypeScript + Vite
-- 后端:Node.js + Express + TypeScript
-- 数据库:SQLite(通过 better-sqlite3 直接读写本地文件,无需额外安装数据库服务)
-- CSV 处理:csv-parse(解析,正确处理带逗号/引号的字段)+ iconv-lite(GBK 编码解码)—— 数据正确性相关的依赖,跟"能不装就不装"的原则不同,详见「AI 辅助开发过程」
-- 开发工具:npm workspaces(统一管理前后端依赖)+ concurrently(一条命令同时启动前后端)
-- 前端没有引入路由库或图表库:页面切换用简单的状态切换代替(避免引入有已知漏洞的 react-router-dom),看板的条形图是纯 CSS/SVG 手写实现
-
----
-
-## 四、项目结构
-
-```
-social-content-tracker/
-├── package.json           # 根目录脚本:一条命令同时启动前后端
-├── backend/                # 后端:Express + TypeScript
-│   ├── src/
-│   │   ├── db/              # 数据库连接(建表逻辑就在连接建立时执行,schema.sql)、种子数据脚本(seed.ts)
-│   │   ├── routes/          # 路由:定义有哪些接口
-│   │   ├── controllers/     # 接收请求、返回响应(content/review/dashboard/import 四组)
-│   │   ├── services/        # 业务逻辑:contentService(增删查)、statusService(状态机+阻塞天数)、
-│   │   │                     #          reviewService(审核)、dashboardService(看板聚合统计)、importService(CSV导入)
-│   │   ├── constants/       # 下拉选项常量(平台/内容类型等),与前端保持同步
-│   │   └── types/           # TypeScript 类型定义
-│   └── data/                 # SQLite 数据库文件(不进 git)
-└── frontend/                # 前端:React + TypeScript + Vite
-    └── src/
-        ├── pages/            # 页面:录入/批量导入/列表/详情/看板
-        ├── components/       # 可复用的界面部件(FilterBar、BarList 条形图)
-        ├── api/              # 统一管理"向后端请求数据"的代码
-        ├── utils/            # statusRules(状态机规则的前端镜像)、csv(CSV生成与下载)
-        ├── constants/        # 下拉选项常量,与后端保持同步
-        └── types/            # TypeScript 类型定义(与后端保持一致)
-```
-
-前后端分离架构:前端负责界面展示与交互,后端负责数据存取与业务逻辑,两者通过 HTTP 接口(`/api/*`)通信。后端内部按 `routes → controllers → services` 分层,职责边界清晰,便于定位问题和逐步扩展功能。
-
----
-
-## 五、运行方式
+## 三、运行方式
 
 ### 环境要求
 
@@ -200,6 +160,46 @@ npm run seed -w backend
 ```
 
 会先清空业务数据、再插入一批虚构的示例内容(约 28 条,覆盖不同平台/状态/内容目标,部分带审核打回记录),可以反复执行。所有数据均为虚构,不含任何真实公司、人物或商业数据。
+
+---
+
+## 四、技术栈
+
+- 前端:React 18 + TypeScript + Vite
+- 后端:Node.js + Express + TypeScript
+- 数据库:SQLite(通过 better-sqlite3 直接读写本地文件,无需额外安装数据库服务)
+- CSV 处理:csv-parse(解析,正确处理带逗号/引号的字段)+ iconv-lite(GBK 编码解码)—— 数据正确性相关的依赖,跟"能不装就不装"的原则不同,详见「AI 辅助开发过程」
+- 开发工具:npm workspaces(统一管理前后端依赖)+ concurrently(一条命令同时启动前后端)
+- 前端没有引入路由库或图表库:页面切换用简单的状态切换代替(避免引入有已知漏洞的 react-router-dom),看板的条形图是纯 CSS/SVG 手写实现
+
+---
+
+## 五、项目结构
+
+```
+social-content-tracker/
+├── package.json           # 根目录脚本:一条命令同时启动前后端
+├── backend/                # 后端:Express + TypeScript
+│   ├── src/
+│   │   ├── db/              # 数据库连接(建表逻辑就在连接建立时执行,schema.sql)、种子数据脚本(seed.ts)
+│   │   ├── routes/          # 路由:定义有哪些接口
+│   │   ├── controllers/     # 接收请求、返回响应(content/review/dashboard/import 四组)
+│   │   ├── services/        # 业务逻辑:contentService(增删查)、statusService(状态机+阻塞天数)、
+│   │   │                     #          reviewService(审核)、dashboardService(看板聚合统计)、importService(CSV导入)
+│   │   ├── constants/       # 下拉选项常量(平台/内容类型等),与前端保持同步
+│   │   └── types/           # TypeScript 类型定义
+│   └── data/                 # SQLite 数据库文件(不进 git)
+└── frontend/                # 前端:React + TypeScript + Vite
+    └── src/
+        ├── pages/            # 页面:录入/批量导入/列表/详情/看板
+        ├── components/       # 可复用的界面部件(FilterBar、BarList 条形图)
+        ├── api/              # 统一管理"向后端请求数据"的代码
+        ├── utils/            # statusRules(状态机规则的前端镜像)、csv(CSV生成与下载)
+        ├── constants/        # 下拉选项常量,与后端保持同步
+        └── types/            # TypeScript 类型定义(与后端保持一致)
+```
+
+前后端分离架构:前端负责界面展示与交互,后端负责数据存取与业务逻辑,两者通过 HTTP 接口(`/api/*`)通信。后端内部按 `routes → controllers → services` 分层,职责边界清晰,便于定位问题和逐步扩展功能。
 
 ---
 
