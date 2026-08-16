@@ -116,6 +116,23 @@ export interface PublishRhythm {
   published_count: number;
 }
 
+export interface MaterialWaitCompleted {
+  material_source: string;
+  sample_size: number;
+  avg_wait_days: number | null;
+}
+
+export interface MaterialWaitOngoing {
+  material_source: string;
+  ongoing_count: number;
+  max_wait_days: number;
+}
+
+export interface MaterialWaitStats {
+  completed: MaterialWaitCompleted[];
+  ongoing: MaterialWaitOngoing[];
+}
+
 export interface DashboardStats {
   blocked_summary: BlockedSummary;
   content_goal_performance: ContentGoalPerformance[];
@@ -123,4 +140,5 @@ export interface DashboardStats {
   avg_review_rounds: number | null;
   reject_reason_distribution: RejectReasonCount[];
   publish_rhythm: PublishRhythm[];
+  material_wait: MaterialWaitStats;
 }

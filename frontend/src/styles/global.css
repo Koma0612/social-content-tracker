@@ -620,6 +620,17 @@ body {
   margin-bottom: 12px;
 }
 
+.dashboard-subheading {
+  margin: 20px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.dashboard-subheading:first-of-type {
+  margin-top: 4px;
+}
+
 .bar-list {
   display: flex;
   flex-direction: column;

@@ -85,6 +85,24 @@ function buildDashboardCsv(stats: DashboardStats): string {
       `${Math.round((p.published_count / p.planned_count) * 100)}%`,
     ]),
   );
+  sections.push([]);
+
+  sections.push(['素材等待统计 - 已完成等待(按素材来源)']);
+  sections.push(['素材来源', '样本数', '平均等待天数']);
+  stats.material_wait.completed.forEach((c) =>
+    sections.push([
+      c.material_source,
+      c.sample_size < MIN_RELIABLE_SAMPLE_SIZE ? `${c.sample_size}(数据不足)` : c.sample_size,
+      c.avg_wait_days,
+    ]),
+  );
+  sections.push([]);
+
+  sections.push(['素材等待统计 - 进行中等待(按素材来源)']);
+  sections.push(['素材来源', '当前等待条数', '最长已等天数']);
+  stats.material_wait.ongoing.forEach((o) =>
+    sections.push([o.material_source, o.ongoing_count, o.max_wait_days]),
+  );
 
   return buildCsvContent(sections);
 }
@@ -122,7 +140,9 @@ export default function DashboardPage() {
     stats.content_goal_performance.length > 0 ||
     stats.platform_goal_performance.length > 0 ||
     stats.reject_reason_distribution.length > 0 ||
-    stats.publish_rhythm.length > 0;
+    stats.publish_rhythm.length > 0 ||
+    stats.material_wait.completed.length > 0 ||
+    stats.material_wait.ongoing.length > 0;
 
   function handleExport() {
     if (!stats) return;
@@ -296,6 +316,73 @@ export default function DashboardPage() {
                     <td>{p.planned_count}</td>
                     <td>{p.published_count}</td>
                     <td>{Math.round((p.published_count / p.planned_count) * 100)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section className="dashboard-section">
+        <h3>素材等待统计</h3>
+        <p className="hint">
+          只统计"收集素材"这一个环节，按素材来源分组。已完成的等待和还在进行中的等待分开展示，不合并——
+          如果把还没结束的等待排除在外，等得最久、最有问题的那批(比如某个供应方拖了很久还没交)恰恰会被藏起来，
+          平均值会显得比实际情况更健康。
+        </p>
+
+        <h4 className="dashboard-subheading">已完成等待</h4>
+        {stats.material_wait.completed.length === 0 ? (
+          <p className="hint">还没有已经结束的"收集素材"等待记录。</p>
+        ) : (
+          <div className="table-wrap">
+            <table className="content-table">
+              <thead>
+                <tr>
+                  <th>素材来源</th>
+                  <th>样本数</th>
+                  <th>平均等待天数</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.material_wait.completed.map((c) => {
+                  const lowSample = c.sample_size < MIN_RELIABLE_SAMPLE_SIZE;
+                  return (
+                    <tr key={c.material_source} className={lowSample ? 'row-low-sample' : undefined}>
+                      <td>{c.material_source}</td>
+                      <td>
+                        n={c.sample_size}
+                        {lowSample && <span className="sample-warning">数据不足，仅供参考</span>}
+                      </td>
+                      <td>{c.avg_wait_days ?? '—'} 天</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <h4 className="dashboard-subheading">进行中等待</h4>
+        {stats.material_wait.ongoing.length === 0 ? (
+          <p className="hint">目前没有内容正卡在"收集素材"环节。</p>
+        ) : (
+          <div className="table-wrap">
+            <table className="content-table">
+              <thead>
+                <tr>
+                  <th>素材来源</th>
+                  <th>当前等待条数</th>
+                  <th>最长已等天数</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.material_wait.ongoing.map((o) => (
+                  <tr key={o.material_source} className={o.max_wait_days >= 3 ? 'row-blocked' : undefined}>
+                    <td>{o.material_source}</td>
+                    <td>{o.ongoing_count}</td>
+                    <td>{o.max_wait_days} 天</td>
                   </tr>
                 ))}
               </tbody>

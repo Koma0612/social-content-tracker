@@ -126,6 +126,101 @@ export function getPlatformGoalPerformance(): PlatformGoalPerformance[] {
   }));
 }
 
+export interface MaterialWaitCompleted {
+  material_source: string;
+  sample_size: number;
+  avg_wait_days: number | null;
+}
+
+export interface MaterialWaitOngoing {
+  material_source: string;
+  ongoing_count: number;
+  max_wait_days: number;
+}
+
+export interface MaterialWaitStats {
+  completed: MaterialWaitCompleted[];
+  ongoing: MaterialWaitOngoing[];
+}
+
+const NO_MATERIAL_SOURCE_LABEL = '未填写';
+
+/**
+ * 素材等待统计：按"素材来源"分组，分开统计"已完成的等待"和"正在进行的等待"，
+ * 不合并成一个数字——如果把还没结束的等待直接排除在平均值之外，会出现幸存者
+ * 偏差:等得最久、最有问题的那批(比如某个供应方拖了 20 天还没交)恰恰是还没
+ * 结束的，一旦排除，平均值会显得很健康，但最严重的问题反而被藏起来了。
+ */
+export function getMaterialWaitStats(): MaterialWaitStats {
+  // 已完成的等待：用窗口函数 LEAD 在同一条内容的完整状态历史里，找到每一次
+  // "进入收集素材"之后紧跟着的下一条记录(也就是离开收集素材的那一刻)。
+  // 只有真的有"下一条记录"的，才说明这次等待已经结束，可以计入平均值。
+  const completedRows = db
+    .prepare(
+      `WITH ordered_history AS (
+         SELECT
+           content_id,
+           to_status,
+           changed_at,
+           LEAD(changed_at) OVER (PARTITION BY content_id ORDER BY changed_at, id) AS next_changed_at
+         FROM status_history
+       ),
+       completed_waits AS (
+         SELECT
+           content_id,
+           (julianday(next_changed_at) - julianday(changed_at)) AS wait_days
+         FROM ordered_history
+         WHERE to_status = '收集素材' AND next_changed_at IS NOT NULL
+       )
+       SELECT
+         COALESCE(c.material_source, @noSource) AS material_source,
+         COUNT(*) AS sample_size,
+         AVG(w.wait_days) AS avg_wait_days
+       FROM completed_waits w
+       JOIN contents c ON c.id = w.content_id
+       GROUP BY COALESCE(c.material_source, @noSource)
+       ORDER BY sample_size DESC`,
+    )
+    .all({ noSource: NO_MATERIAL_SOURCE_LABEL }) as MaterialWaitCompleted[];
+
+  const round1 = (n: number | null) => (n === null ? null : Math.round(n * 10) / 10);
+
+  // 进行中的等待：现在还处于"收集素材"状态的内容，用跟阻塞天数一样的口径
+  // (当前时间 - 进入该状态的时间)现算，在 JS 里算而不是用 SQL 的 julianday('now')，
+  // 是为了跟 statusService.attachBlockInfo 用同一套时间处理逻辑，避免两处口径不一致。
+  const ongoingContents = db
+    .prepare(`SELECT material_source, status_entered_at FROM contents WHERE current_status = '收集素材'`)
+    .all() as { material_source: string | null; status_entered_at: string }[];
+
+  const ongoingMap = new Map<string, { count: number; maxDays: number }>();
+  for (const row of ongoingContents) {
+    const label = row.material_source ?? NO_MATERIAL_SOURCE_LABEL;
+    const enteredAt = new Date(row.status_entered_at.replace(' ', 'T') + 'Z');
+    const days = Math.max(0, Math.floor((Date.now() - enteredAt.getTime()) / (1000 * 60 * 60 * 24)));
+
+    const existing = ongoingMap.get(label);
+    if (existing) {
+      existing.count += 1;
+      existing.maxDays = Math.max(existing.maxDays, days);
+    } else {
+      ongoingMap.set(label, { count: 1, maxDays: days });
+    }
+  }
+
+  const ongoing: MaterialWaitOngoing[] = Array.from(ongoingMap.entries())
+    .map(([material_source, v]) => ({
+      material_source,
+      ongoing_count: v.count,
+      max_wait_days: v.maxDays,
+    }))
+    .sort((a, b) => b.max_wait_days - a.max_wait_days);
+
+  return {
+    completed: completedRows.map((r) => ({ ...r, avg_wait_days: round1(r.avg_wait_days) })),
+    ongoing,
+  };
+}
+
 /**
  * 平均审核轮次：每条内容取它审核记录里最大的轮次(即这条内容总共审了几轮)，
  * 再对所有有过审核记录的内容取平均，量化返工成本。没有任何审核记录的
@@ -187,6 +282,7 @@ export interface DashboardStats {
   avg_review_rounds: number | null;
   reject_reason_distribution: RejectReasonCount[];
   publish_rhythm: PublishRhythm[];
+  material_wait: MaterialWaitStats;
 }
 
 export function getDashboardStats(): DashboardStats {
@@ -197,5 +293,6 @@ export function getDashboardStats(): DashboardStats {
     avg_review_rounds: getAvgReviewRounds(),
     reject_reason_distribution: getRejectReasonDistribution(),
     publish_rhythm: getPublishRhythm(),
+    material_wait: getMaterialWaitStats(),
   };
 }
