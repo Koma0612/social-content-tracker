@@ -445,14 +445,16 @@ body {
 }
 
 /* 审核表单 */
-.review-form {
+.review-form,
+.metrics-form {
   display: flex;
   flex-direction: column;
   gap: 14px;
   max-width: 480px;
 }
 
-.review-form label {
+.review-form label,
+.metrics-form label {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -462,7 +464,8 @@ body {
 
 .review-form input,
 .review-form select,
-.review-form textarea {
+.review-form textarea,
+.metrics-form input {
   padding: 8px 10px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -470,7 +473,8 @@ body {
   font-family: inherit;
 }
 
-.review-form button {
+.review-form button,
+.metrics-form button {
   align-self: flex-start;
 }
 

@@ -114,6 +114,36 @@ export async function submitReview(
   return res.json();
 }
 
+export interface UpdateMetricsInput {
+  actual_publish_date?: string | null;
+  publish_url?: string | null;
+  impressions?: number | null;
+  likes?: number | null;
+  comments?: number | null;
+  shares?: number | null;
+  saves?: number | null;
+  dm_count?: number | null;
+  new_followers?: number | null;
+}
+
+export async function updateContentMetrics(
+  id: number,
+  input: UpdateMetricsInput,
+): Promise<ContentWithBlockInfo> {
+  const res = await fetch(`${API_BASE}/contents/${id}/metrics`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? `保存复盘数据失败: ${res.status}`);
+  }
+
+  return res.json();
+}
+
 export async function fetchDashboardStats(): Promise<DashboardStats> {
   const res = await fetch(`${API_BASE}/dashboard`);
   if (!res.ok) throw new Error(`获取看板数据失败: ${res.status}`);

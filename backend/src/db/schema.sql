@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS contents (
   likes INTEGER,
   comments INTEGER,
   shares INTEGER,
+  saves INTEGER, -- 收藏数：不同平台能获取的指标不同(比如 Facebook 基本没有收藏功能)，允许为空
   dm_count INTEGER,
   new_followers INTEGER,
   metrics_captured_at TEXT, -- 数据抓取时间：同一条内容不同时间点的数据不能直接比较

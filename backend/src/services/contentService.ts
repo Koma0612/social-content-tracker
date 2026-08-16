@@ -120,3 +120,67 @@ export function createContent(input: CreateContentInput): ContentRecord {
   const contentId = createContentTxn(input);
   return getByIdStmt.get(contentId) as ContentRecord;
 }
+
+export class MetricsError extends Error {}
+
+export interface UpdateMetricsInput {
+  actual_publish_date?: string | null;
+  publish_url?: string | null;
+  impressions?: number | null;
+  likes?: number | null;
+  comments?: number | null;
+  shares?: number | null;
+  saves?: number | null;
+  dm_count?: number | null;
+  new_followers?: number | null;
+}
+
+const updateMetricsStmt = db.prepare(`
+  UPDATE contents
+  SET actual_publish_date = @actual_publish_date,
+      publish_url = @publish_url,
+      impressions = @impressions,
+      likes = @likes,
+      comments = @comments,
+      shares = @shares,
+      saves = @saves,
+      dm_count = @dm_count,
+      new_followers = @new_followers,
+      metrics_captured_at = datetime('now'),
+      updated_at = datetime('now')
+  WHERE id = @id
+`);
+
+/**
+ * 更新一条内容的复盘数据(曝光/互动/转化等)。只允许在内容已经处于"发布"状态时
+ * 更新——复盘数据本来就是发布之后才有意义的东西。支持重复调用、覆盖式更新
+ * (比如发布24小时后填一次、7天后再填一次)，每次更新都会重新记录
+ * metrics_captured_at，跟"同一条内容不同时间点的数据不可直接比较"这个设计对应。
+ *
+ * 字段不传或传 null，就原样存成 NULL，不会被 SQL 的 AVG() 计入平均值计算——
+ * 调用方(controller)要注意区分"用户没填"和"用户填了 0"，不能把两者混为一谈。
+ */
+export function updateMetrics(contentId: number, input: UpdateMetricsInput): ContentWithBlockInfo {
+  const content = getByIdStmt.get(contentId) as ContentRecord | undefined;
+  if (!content) {
+    throw new MetricsError('内容不存在');
+  }
+  if (content.current_status !== '发布') {
+    throw new MetricsError('只有内容处于"发布"状态时才能填写复盘数据');
+  }
+
+  updateMetricsStmt.run({
+    id: contentId,
+    actual_publish_date: input.actual_publish_date ?? null,
+    publish_url: input.publish_url ?? null,
+    impressions: input.impressions ?? null,
+    likes: input.likes ?? null,
+    comments: input.comments ?? null,
+    shares: input.shares ?? null,
+    saves: input.saves ?? null,
+    dm_count: input.dm_count ?? null,
+    new_followers: input.new_followers ?? null,
+  });
+
+  return attachBlockInfo(getByIdStmt.get(contentId) as ContentRecord);
+}

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { ContentStatus } from '../types';
 import * as contentService from '../services/contentService';
+import { MetricsError } from '../services/contentService';
 import * as statusService from '../services/statusService';
 import { TransitionError } from '../services/statusService';
 
@@ -111,5 +112,68 @@ export function transitionContentStatus(req: Request, res: Response): void {
     }
     console.error('[transitionContentStatus] failed:', err);
     res.status(500).json({ error: '状态变更失败，请稍后重试' });
+  }
+}
+
+const METRIC_NUMBER_FIELDS = [
+  'impressions',
+  'likes',
+  'comments',
+  'shares',
+  'saves',
+  'dm_count',
+  'new_followers',
+] as const;
+
+/**
+ * 把请求体里的一个数字字段安全地转成 number | null。
+ * 关键点：不填(undefined)、显式传 null、传空字符串，统一当成"没有这个数据"存成 NULL；
+ * 只有真的是一个合法数字才存那个数字——绝不能把"没填"悄悄当成 0，
+ * 否则会拉低平台/内容目标的平均值,导致统计结论失真。
+ */
+function parseOptionalNumber(value: unknown, fieldLabel: string): number | null {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+  const num = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(num)) {
+    throw new MetricsError(`${fieldLabel} 必须是数字`);
+  }
+  return num;
+}
+
+/**
+ * 更新一条内容的复盘数据。只允许在"发布"状态下更新，支持重复调用覆盖式更新。
+ */
+export function updateContentMetrics(req: Request, res: Response): void {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) {
+    res.status(400).json({ error: '无效的内容 ID' });
+    return;
+  }
+
+  const body = req.body ?? {};
+
+  try {
+    const input: contentService.UpdateMetricsInput = {
+      actual_publish_date:
+        typeof body.actual_publish_date === 'string' && body.actual_publish_date
+          ? body.actual_publish_date
+          : null,
+      publish_url: typeof body.publish_url === 'string' && body.publish_url ? body.publish_url : null,
+    };
+    for (const field of METRIC_NUMBER_FIELDS) {
+      input[field] = parseOptionalNumber(body[field], field);
+    }
+
+    const updated = contentService.updateMetrics(id, input);
+    res.json(updated);
+  } catch (err) {
+    if (err instanceof MetricsError) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    console.error('[updateContentMetrics] failed:', err);
+    res.status(500).json({ error: '保存复盘数据失败，请稍后重试' });
   }
 }

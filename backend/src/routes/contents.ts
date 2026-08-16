@@ -5,6 +5,7 @@ import {
   getContent,
   getContentHistory,
   transitionContentStatus,
+  updateContentMetrics,
 } from '../controllers/contentController';
 import { createReview, listReviews } from '../controllers/reviewController';
 import { importContents } from '../controllers/importController';
@@ -17,6 +18,7 @@ router.post('/import', importContents);
 router.get('/:id', getContent);
 router.get('/:id/history', getContentHistory);
 router.patch('/:id/status', transitionContentStatus);
+router.patch('/:id/metrics', updateContentMetrics);
 router.get('/:id/reviews', listReviews);
 router.post('/:id/reviews', createReview);
 

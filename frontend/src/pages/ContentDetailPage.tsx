@@ -5,6 +5,7 @@ import {
   fetchReviews,
   transitionContentStatus,
   submitReview,
+  updateContentMetrics,
 } from '../api/client';
 import {
   ContentWithBlockInfo,
@@ -48,6 +49,22 @@ export default function ContentDetailPage({ contentId, onBack }: ContentDetailPa
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [reviewSuccess, setReviewSuccess] = useState<string | null>(null);
 
+  const EMPTY_METRICS_FORM = {
+    actual_publish_date: '',
+    publish_url: '',
+    impressions: '',
+    likes: '',
+    comments: '',
+    shares: '',
+    saves: '',
+    dm_count: '',
+    new_followers: '',
+  };
+  const [metricsForm, setMetricsForm] = useState(EMPTY_METRICS_FORM);
+  const [metricsSubmitting, setMetricsSubmitting] = useState(false);
+  const [metricsError, setMetricsError] = useState<string | null>(null);
+  const [metricsSuccess, setMetricsSuccess] = useState<string | null>(null);
+
   async function load() {
     setLoadState('loading');
     setLoadError(null);
@@ -61,6 +78,19 @@ export default function ContentDetailPage({ contentId, onBack }: ContentDetailPa
       setHistory(historyRes);
       setReviews(reviewsRes);
       setNewOwner(contentRes.current_owner ?? '');
+      // 复盘表单用现有数据回填——这样"再次提交"发送的是完整的一份数据(哪怕某些
+      // 字段用户这次没碰)，而不会因为漏传某个字段就把之前填过的值意外清空。
+      setMetricsForm({
+        actual_publish_date: contentRes.actual_publish_date ?? '',
+        publish_url: contentRes.publish_url ?? '',
+        impressions: contentRes.impressions?.toString() ?? '',
+        likes: contentRes.likes?.toString() ?? '',
+        comments: contentRes.comments?.toString() ?? '',
+        shares: contentRes.shares?.toString() ?? '',
+        saves: contentRes.saves?.toString() ?? '',
+        dm_count: contentRes.dm_count?.toString() ?? '',
+        new_followers: contentRes.new_followers?.toString() ?? '',
+      });
       setLoadState('ready');
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : '加载失败，请稍后重试');
@@ -95,6 +125,41 @@ export default function ContentDetailPage({ contentId, onBack }: ContentDetailPa
       setActionError(err instanceof Error ? err.message : '状态变更失败，请稍后重试');
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  function toNumberOrUndefined(value: string): number | undefined {
+    if (value.trim() === '') return undefined;
+    const n = Number(value);
+    return Number.isFinite(n) ? n : undefined;
+  }
+
+  async function handleMetricsSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!content) return;
+
+    setMetricsSubmitting(true);
+    setMetricsError(null);
+    setMetricsSuccess(null);
+
+    try {
+      await updateContentMetrics(content.id, {
+        actual_publish_date: metricsForm.actual_publish_date || undefined,
+        publish_url: metricsForm.publish_url || undefined,
+        impressions: toNumberOrUndefined(metricsForm.impressions),
+        likes: toNumberOrUndefined(metricsForm.likes),
+        comments: toNumberOrUndefined(metricsForm.comments),
+        shares: toNumberOrUndefined(metricsForm.shares),
+        saves: toNumberOrUndefined(metricsForm.saves),
+        dm_count: toNumberOrUndefined(metricsForm.dm_count),
+        new_followers: toNumberOrUndefined(metricsForm.new_followers),
+      });
+      setMetricsSuccess('复盘数据已保存');
+      await load();
+    } catch (err) {
+      setMetricsError(err instanceof Error ? err.message : '保存失败，请稍后重试');
+    } finally {
+      setMetricsSubmitting(false);
     }
   }
 
@@ -252,6 +317,130 @@ export default function ContentDetailPage({ contentId, onBack }: ContentDetailPa
 
         {actionSuccess && <div className="banner banner-success">{actionSuccess}</div>}
         {actionError && <div className="banner banner-error">{actionError}</div>}
+      </section>
+
+      <section className="detail-section">
+        <h3>复盘数据</h3>
+
+        {content.current_status !== '发布' ? (
+          <p className="hint">内容还没发布，等状态变成"发布"之后再来填曝光/互动这些复盘数据。</p>
+        ) : (
+          <form className="metrics-form" onSubmit={handleMetricsSubmit}>
+            <div className="form-row">
+              <label>
+                实际发布时间
+                <input
+                  type="date"
+                  value={metricsForm.actual_publish_date}
+                  onChange={(e) =>
+                    setMetricsForm((prev) => ({ ...prev, actual_publish_date: e.target.value }))
+                  }
+                />
+              </label>
+              <label>
+                发布链接
+                <input
+                  type="text"
+                  value={metricsForm.publish_url}
+                  onChange={(e) => setMetricsForm((prev) => ({ ...prev, publish_url: e.target.value }))}
+                  placeholder="https://..."
+                />
+              </label>
+            </div>
+
+            <div className="form-row">
+              <label>
+                曝光量
+                <input
+                  type="number"
+                  min="0"
+                  value={metricsForm.impressions}
+                  onChange={(e) => setMetricsForm((prev) => ({ ...prev, impressions: e.target.value }))}
+                  placeholder="这个平台没有就留空"
+                />
+              </label>
+              <label>
+                点赞
+                <input
+                  type="number"
+                  min="0"
+                  value={metricsForm.likes}
+                  onChange={(e) => setMetricsForm((prev) => ({ ...prev, likes: e.target.value }))}
+                  placeholder="这个平台没有就留空"
+                />
+              </label>
+            </div>
+
+            <div className="form-row">
+              <label>
+                评论
+                <input
+                  type="number"
+                  min="0"
+                  value={metricsForm.comments}
+                  onChange={(e) => setMetricsForm((prev) => ({ ...prev, comments: e.target.value }))}
+                  placeholder="这个平台没有就留空"
+                />
+              </label>
+              <label>
+                转发/分享
+                <input
+                  type="number"
+                  min="0"
+                  value={metricsForm.shares}
+                  onChange={(e) => setMetricsForm((prev) => ({ ...prev, shares: e.target.value }))}
+                  placeholder="这个平台没有就留空"
+                />
+              </label>
+            </div>
+
+            <div className="form-row">
+              <label>
+                收藏
+                <input
+                  type="number"
+                  min="0"
+                  value={metricsForm.saves}
+                  onChange={(e) => setMetricsForm((prev) => ({ ...prev, saves: e.target.value }))}
+                  placeholder="这个平台没有就留空"
+                />
+              </label>
+              <label>
+                私信数
+                <input
+                  type="number"
+                  min="0"
+                  value={metricsForm.dm_count}
+                  onChange={(e) => setMetricsForm((prev) => ({ ...prev, dm_count: e.target.value }))}
+                  placeholder="这个平台没有就留空"
+                />
+              </label>
+            </div>
+
+            <label>
+              涨粉数
+              <input
+                type="number"
+                min="0"
+                value={metricsForm.new_followers}
+                onChange={(e) => setMetricsForm((prev) => ({ ...prev, new_followers: e.target.value }))}
+                placeholder="这个平台没有就留空"
+              />
+            </label>
+
+            <p className="hint">
+              拿不到的指标直接留空就好，不要填 0——填 0
+              会被当成"真实测到的 0"参与看板的平均值计算，跟"没有这个数据"是两回事。
+            </p>
+
+            <button type="submit" className="btn-primary" disabled={metricsSubmitting}>
+              {metricsSubmitting ? '保存中…' : '保存复盘数据'}
+            </button>
+          </form>
+        )}
+
+        {metricsSuccess && <div className="banner banner-success">{metricsSuccess}</div>}
+        {metricsError && <div className="banner banner-error">{metricsError}</div>}
       </section>
 
       <section className="detail-section">

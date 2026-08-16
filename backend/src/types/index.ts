@@ -64,6 +64,7 @@ export interface ContentRecord {
   likes: number | null;
   comments: number | null;
   shares: number | null;
+  saves: number | null;
   dm_count: number | null;
   new_followers: number | null;
   metrics_captured_at: string | null;

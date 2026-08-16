@@ -55,6 +55,7 @@ interface SeedContent {
   likes: number | null;
   comments: number | null;
   shares: number | null;
+  saves?: number | null; // 可选：不是每条记录都要显式写，未写的默认存 NULL(不是 0)
   dm_count: number | null;
   new_followers: number | null;
   metrics_captured_at: string | null;
@@ -253,7 +254,7 @@ const records: SeedContent[] = [
     language_market: '英语/北美市场', owner: 'Amy', copywriting: '文案已定稿', material_source: null,
     current_status: '发布', status_entered_at: daysAgo(8), current_owner: 'Amy',
     is_paid_promotion: 0, paid_amount: null, actual_publish_date: '2026-08-06', publish_url: 'https://example-social.test/post/1002',
-    impressions: 9200, likes: 210, comments: 38, shares: 22, dm_count: 9, new_followers: 12, metrics_captured_at: daysAgo(1),
+    impressions: 9200, likes: 210, comments: 38, shares: 22, saves: 46, dm_count: 9, new_followers: 12, metrics_captured_at: daysAgo(1),
   },
   {
     planned_publish_date: '2026-08-07', platform: 'LinkedIn', topic: '二手设备翻新案例分享',
@@ -261,7 +262,7 @@ const records: SeedContent[] = [
     language_market: '英语/欧洲市场', owner: 'Ben', copywriting: '文案已定稿', material_source: null,
     current_status: '发布', status_entered_at: daysAgo(7), current_owner: 'Ben',
     is_paid_promotion: 0, paid_amount: null, actual_publish_date: '2026-08-07', publish_url: 'https://example-social.test/post/1003',
-    impressions: 4100, likes: 95, comments: 18, shares: 9, dm_count: 27, new_followers: 6, metrics_captured_at: daysAgo(1),
+    impressions: 4100, likes: 95, comments: 18, shares: 9, saves: 15, dm_count: 27, new_followers: 6, metrics_captured_at: daysAgo(1),
     reviews: [
       { reviewer_role: '老板', reviewer_name: 'Robert', round_number: 1, result: '打回',
         comment: '案例主角背景跟目标客户画像不太匹配,换一个案例', reject_reasons: ['受众适配'], reviewed_at: daysAgo(9) },
@@ -274,7 +275,7 @@ const records: SeedContent[] = [
     language_market: '英语/北美市场', owner: 'Cathy', copywriting: '文案已定稿', material_source: null,
     current_status: '发布', status_entered_at: daysAgo(6), current_owner: 'Cathy',
     is_paid_promotion: 1, paid_amount: 1200, actual_publish_date: '2026-08-08', publish_url: 'https://example-social.test/post/1004',
-    impressions: 44200, likes: 880, comments: 61, shares: 47, dm_count: 6, new_followers: 58, metrics_captured_at: daysAgo(1),
+    impressions: 44200, likes: 880, comments: 61, shares: 47, saves: 132, dm_count: 6, new_followers: 58, metrics_captured_at: daysAgo(1),
   },
   {
     planned_publish_date: '2026-08-09', platform: 'Facebook', topic: '农忙前准备清单:开季检查全攻略',
@@ -295,7 +296,7 @@ const records: SeedContent[] = [
     language_market: '英语/澳新市场', owner: 'Ella', copywriting: '文案已定稿', material_source: null,
     current_status: '发布', status_entered_at: daysAgo(4), current_owner: 'Ella',
     is_paid_promotion: 0, paid_amount: null, actual_publish_date: '2026-08-10', publish_url: 'https://example-social.test/post/1006',
-    impressions: 5300, likes: 130, comments: 14, shares: 8, dm_count: 33, new_followers: 4, metrics_captured_at: daysAgo(1),
+    impressions: 5300, likes: 130, comments: 14, shares: 8, saves: 28, dm_count: 33, new_followers: 4, metrics_captured_at: daysAgo(1),
   },
   {
     planned_publish_date: '2026-08-11', platform: 'LinkedIn', topic: '可持续农业:节油设备如何降低运营成本',
@@ -303,7 +304,7 @@ const records: SeedContent[] = [
     language_market: '英语/欧洲市场', owner: 'Frank', copywriting: '文案已定稿', material_source: null,
     current_status: '发布', status_entered_at: daysAgo(3), current_owner: 'Frank',
     is_paid_promotion: 0, paid_amount: null, actual_publish_date: '2026-08-11', publish_url: 'https://example-social.test/post/1007',
-    impressions: 15800, likes: 340, comments: 52, shares: 29, dm_count: 3, new_followers: 21, metrics_captured_at: daysAgo(1),
+    impressions: 15800, likes: 340, comments: 52, shares: 29, saves: 61, dm_count: 3, new_followers: 21, metrics_captured_at: daysAgo(1),
   },
   {
     planned_publish_date: '2026-08-12', platform: 'Facebook', topic: '老客户回访:十年设备使用心得',
@@ -324,7 +325,7 @@ const records: SeedContent[] = [
     language_market: '西班牙语/拉美市场', owner: 'Ben', copywriting: '文案已定稿', material_source: null,
     current_status: '发布', status_entered_at: daysAgo(1), current_owner: 'Ben',
     is_paid_promotion: 0, paid_amount: null, actual_publish_date: '2026-08-13', publish_url: 'https://example-social.test/post/1009',
-    impressions: 6100, likes: 145, comments: 20, shares: 12, dm_count: 19, new_followers: 7, metrics_captured_at: hoursAgo(6),
+    impressions: 6100, likes: 145, comments: 20, shares: 12, saves: 31, dm_count: 19, new_followers: 7, metrics_captured_at: hoursAgo(6),
   },
 
   // ---------- 设备融资方案(2条,展示同一选题在不同平台的排期) ----------
@@ -365,14 +366,14 @@ function main() {
       content_goal, campaign, language_market, owner,
       copywriting, material_source, current_status, status_entered_at, current_owner,
       is_paid_promotion, paid_amount,
-      actual_publish_date, publish_url, impressions, likes, comments, shares,
+      actual_publish_date, publish_url, impressions, likes, comments, shares, saves,
       dm_count, new_followers, metrics_captured_at
     ) VALUES (
       @planned_publish_date, @platform, @topic, @content_type, @content_format,
       @content_goal, @campaign, @language_market, @owner,
       @copywriting, @material_source, @current_status, @status_entered_at, @current_owner,
       @is_paid_promotion, @paid_amount,
-      @actual_publish_date, @publish_url, @impressions, @likes, @comments, @shares,
+      @actual_publish_date, @publish_url, @impressions, @likes, @comments, @shares, @saves,
       @dm_count, @new_followers, @metrics_captured_at
     )
   `);
@@ -394,7 +395,9 @@ function main() {
   const insertAll = db.transaction(() => {
     for (const record of records) {
       const { reviews, ...contentFields } = record;
-      const result = insertContent.run(contentFields);
+      // saves 是可选字段，没写的记录(比如 Facebook 平台没有收藏功能)显式补成 null，
+      // 而不是 undefined——better-sqlite3 绑定具名参数时要求每个 @xxx 都有值。
+      const result = insertContent.run({ ...contentFields, saves: contentFields.saves ?? null });
       const contentId = Number(result.lastInsertRowid);
 
       // 简化处理：种子数据只记一条"直接进入当前状态"的历史记录，
