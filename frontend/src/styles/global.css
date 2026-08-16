@@ -537,6 +537,43 @@ body {
   color: #b91c1c;
 }
 
+.stat-value-success {
+  color: #15803d;
+}
+
+/* 批量导入 */
+.import-page {
+  margin-top: 16px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.import-page h2 {
+  margin-top: 0;
+  font-size: 16px;
+}
+
+.import-upload {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.import-upload input[type='file'] {
+  font-size: 13px;
+}
+
+.import-result {
+  margin-top: 20px;
+}
+
+.import-failures {
+  margin-top: 16px;
+}
+
 .dashboard-section {
   margin-top: 16px;
   padding: 20px 24px;

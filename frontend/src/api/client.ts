@@ -120,6 +120,33 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
   return res.json();
 }
 
+export interface ImportFailure {
+  row: number;
+  reason: string;
+}
+
+export interface ImportResult {
+  total: number;
+  success_count: number;
+  failed_count: number;
+  failures: ImportFailure[];
+}
+
+export async function importContents(contentBase64: string): Promise<ImportResult> {
+  const res = await fetch(`${API_BASE}/contents/import`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content_base64: contentBase64 }),
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? `导入失败: ${res.status}`);
+  }
+
+  return res.json();
+}
+
 export type CreateContentInput = Partial<
   Omit<ContentRecord, 'id' | 'created_at' | 'updated_at' | 'current_status' | 'status_entered_at'>
 > & {
