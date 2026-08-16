@@ -2,6 +2,59 @@ import { useEffect, useState } from 'react';
 import { fetchDashboardStats } from '../api/client';
 import { DashboardStats } from '../types';
 import BarList from '../components/BarList';
+import { buildCsvContent, downloadCsv } from '../utils/csv';
+
+/**
+ * 看板有好几张不同形状的表，导出成一份 CSV 时用"小节标题 + 空行分隔"的方式
+ * 把几张表拼在一起——用 Excel 打开是一整张表，靠空行和小节标题区分每一段，
+ * 整理周报时够用，不需要为此导出多个文件。
+ */
+function buildDashboardCsv(stats: DashboardStats): string {
+  const sections: (string | number | null)[][] = [];
+
+  sections.push(['汇总指标']);
+  sections.push(['指标', '数值']);
+  sections.push(['当前阻塞内容数', stats.blocked_summary.total_blocked]);
+  sections.push(['平均审核轮次', stats.avg_review_rounds ?? '']);
+  sections.push([]);
+
+  sections.push(['阻塞环节分布']);
+  sections.push(['环节', '数量']);
+  stats.blocked_summary.by_status.forEach((s) => sections.push([s.status, s.count]));
+  sections.push([]);
+
+  sections.push(['打回原因分布']);
+  sections.push(['原因', '数量']);
+  stats.reject_reason_distribution.forEach((r) => sections.push([r.reason, r.count]));
+  sections.push([]);
+
+  sections.push(['各内容目标效果']);
+  sections.push(['内容目标', '样本数', '平均曝光量', '平均互动数', '平均私信数', '平均涨粉数']);
+  stats.content_goal_performance.forEach((g) =>
+    sections.push([
+      g.content_goal,
+      g.count,
+      g.avg_impressions,
+      g.avg_engagement,
+      g.avg_dm_count,
+      g.avg_new_followers,
+    ]),
+  );
+  sections.push([]);
+
+  sections.push(['发布节奏(按平台)']);
+  sections.push(['平台', '内容总数', '已发布数', '发布率']);
+  stats.publish_rhythm.forEach((p) =>
+    sections.push([
+      p.platform,
+      p.planned_count,
+      p.published_count,
+      `${Math.round((p.published_count / p.planned_count) * 100)}%`,
+    ]),
+  );
+
+  return buildCsvContent(sections);
+}
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -37,9 +90,26 @@ export default function DashboardPage() {
     stats.reject_reason_distribution.length > 0 ||
     stats.publish_rhythm.length > 0;
 
+  function handleExport() {
+    if (!stats) return;
+    const csv = buildDashboardCsv(stats);
+    const today = new Date().toISOString().slice(0, 10);
+    downloadCsv(`数据看板_${today}.csv`, csv);
+  }
+
   return (
     <div className="dashboard-page">
-      <h2>数据看板</h2>
+      <div className="list-page-header">
+        <h2>数据看板</h2>
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={handleExport}
+          disabled={!hasAnyData}
+        >
+          导出 CSV
+        </button>
+      </div>
 
       {!hasAnyData && (
         <p className="hint">

@@ -217,6 +217,19 @@ body {
   font-size: 16px;
 }
 
+/* 页面头部:标题 + 右侧操作按钮(导出等)横排，列表页/看板页共用 */
+.list-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.list-page-header h2 {
+  margin: 0;
+}
+
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
@@ -501,7 +514,6 @@ body {
 
 /* 数据看板 */
 .dashboard-page h2 {
-  margin: 16px 0;
   font-size: 18px;
 }
 
