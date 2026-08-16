@@ -4,6 +4,10 @@ import { DashboardStats } from '../types';
 import BarList from '../components/BarList';
 import { buildCsvContent, downloadCsv } from '../utils/csv';
 
+// 样本数低于这个值时,该分组的平均值仅供参考——一两条数据的平均值很容易
+// 被极端值带偏,不该被当成"这个平台/目标组合效果好不好"的可靠结论。
+const MIN_RELIABLE_SAMPLE_SIZE = 3;
+
 /**
  * 看板有好几张不同形状的表，导出成一份 CSV 时用"小节标题 + 空行分隔"的方式
  * 把几张表拼在一起——用 Excel 打开是一整张表，靠空行和小节标题区分每一段，
@@ -38,6 +42,35 @@ function buildDashboardCsv(stats: DashboardStats): string {
       g.avg_engagement,
       g.avg_dm_count,
       g.avg_new_followers,
+    ]),
+  );
+  sections.push([]);
+
+  sections.push(['平台效率对比']);
+  sections.push([
+    '平台',
+    '内容目标',
+    '样本数',
+    '平均曝光量',
+    '平均点赞',
+    '平均评论',
+    '平均转发',
+    '平均收藏',
+    '平均私信',
+    '平均涨粉',
+  ]);
+  stats.platform_goal_performance.forEach((p) =>
+    sections.push([
+      p.platform,
+      p.content_goal,
+      p.sample_size < MIN_RELIABLE_SAMPLE_SIZE ? `${p.sample_size}(数据不足)` : p.sample_size,
+      p.avg_impressions,
+      p.avg_likes,
+      p.avg_comments,
+      p.avg_shares,
+      p.avg_saves,
+      p.avg_dm_count,
+      p.avg_new_followers,
     ]),
   );
   sections.push([]);
@@ -87,6 +120,7 @@ export default function DashboardPage() {
   const hasAnyData =
     stats.blocked_summary.by_status.length > 0 ||
     stats.content_goal_performance.length > 0 ||
+    stats.platform_goal_performance.length > 0 ||
     stats.reject_reason_distribution.length > 0 ||
     stats.publish_rhythm.length > 0;
 
@@ -182,6 +216,58 @@ export default function DashboardPage() {
                     <td>{g.avg_new_followers ?? '—'}</td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section className="dashboard-section">
+        <h3>平台效率对比</h3>
+        <p className="hint">
+          按"平台 × 内容目标"交叉分组——回答"同样类型的内容，发在不同平台上效果差多少"。样本数低于{' '}
+          {MIN_RELIABLE_SAMPLE_SIZE} 的分组会标"数据不足"，一两条数据的平均值容易被极端值带偏，别当结论看。
+        </p>
+        {stats.platform_goal_performance.length === 0 ? (
+          <p className="hint">还没有已发布并回填复盘数据的内容。</p>
+        ) : (
+          <div className="table-wrap">
+            <table className="content-table">
+              <thead>
+                <tr>
+                  <th>平台</th>
+                  <th>内容目标</th>
+                  <th>样本数</th>
+                  <th>平均曝光量</th>
+                  <th>平均点赞</th>
+                  <th>平均评论</th>
+                  <th>平均转发</th>
+                  <th>平均收藏</th>
+                  <th>平均私信</th>
+                  <th>平均涨粉</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.platform_goal_performance.map((p) => {
+                  const lowSample = p.sample_size < MIN_RELIABLE_SAMPLE_SIZE;
+                  return (
+                    <tr key={`${p.platform}-${p.content_goal}`} className={lowSample ? 'row-low-sample' : undefined}>
+                      <td>{p.platform}</td>
+                      <td>{p.content_goal}</td>
+                      <td>
+                        n={p.sample_size}
+                        {lowSample && <span className="sample-warning">数据不足，仅供参考</span>}
+                      </td>
+                      <td>{p.avg_impressions ?? '—'}</td>
+                      <td>{p.avg_likes ?? '—'}</td>
+                      <td>{p.avg_comments ?? '—'}</td>
+                      <td>{p.avg_shares ?? '—'}</td>
+                      <td>{p.avg_saves ?? '—'}</td>
+                      <td>{p.avg_dm_count ?? '—'}</td>
+                      <td>{p.avg_new_followers ?? '—'}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

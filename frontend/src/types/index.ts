@@ -92,6 +92,19 @@ export interface ContentGoalPerformance {
   avg_new_followers: number | null;
 }
 
+export interface PlatformGoalPerformance {
+  platform: string;
+  content_goal: string;
+  sample_size: number;
+  avg_impressions: number | null;
+  avg_likes: number | null;
+  avg_comments: number | null;
+  avg_shares: number | null;
+  avg_saves: number | null;
+  avg_dm_count: number | null;
+  avg_new_followers: number | null;
+}
+
 export interface RejectReasonCount {
   reason: RejectReason;
   count: number;
@@ -106,6 +119,7 @@ export interface PublishRhythm {
 export interface DashboardStats {
   blocked_summary: BlockedSummary;
   content_goal_performance: ContentGoalPerformance[];
+  platform_goal_performance: PlatformGoalPerformance[];
   avg_review_rounds: number | null;
   reject_reason_distribution: RejectReasonCount[];
   publish_rhythm: PublishRhythm[];

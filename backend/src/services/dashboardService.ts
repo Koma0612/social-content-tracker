@@ -38,9 +38,11 @@ export interface ContentGoalPerformance {
 }
 
 /**
- * 按"内容目标"分组比较效果，只统计已经有复盘数据(impressions 不为空)的内容。
- * 不同目标看不同指标才有意义——曝光类看 avg_impressions，转化类看 avg_dm_count，
- * 这里只负责把分组平均值算出来，具体"该看哪一列"由前端展示时引导。
+ * 按"内容目标"分组比较效果，只统计已经填过复盘数据的内容(用 metrics_captured_at
+ * 判断"有没有填过"，而不是用某一个具体指标是否为空来判断——因为不同平台能采集
+ * 的指标本来就不一样，用单个指标做筛选条件会漏掉"填了别的指标、但这个指标恰好没有"
+ * 的内容)。不同目标看不同指标才有意义——曝光类看 avg_impressions，转化类看
+ * avg_dm_count，这里只负责把分组平均值算出来，具体"该看哪一列"由前端展示时引导。
  */
 export function getContentGoalPerformance(): ContentGoalPerformance[] {
   const rows = db
@@ -53,7 +55,7 @@ export function getContentGoalPerformance(): ContentGoalPerformance[] {
          AVG(dm_count) AS avg_dm_count,
          AVG(new_followers) AS avg_new_followers
        FROM contents
-       WHERE impressions IS NOT NULL AND content_goal IS NOT NULL
+       WHERE metrics_captured_at IS NOT NULL AND content_goal IS NOT NULL
        GROUP BY content_goal
        ORDER BY count DESC`,
     )
@@ -65,6 +67,60 @@ export function getContentGoalPerformance(): ContentGoalPerformance[] {
     ...r,
     avg_impressions: round(r.avg_impressions),
     avg_engagement: round(r.avg_engagement),
+    avg_dm_count: round(r.avg_dm_count),
+    avg_new_followers: round(r.avg_new_followers),
+  }));
+}
+
+export interface PlatformGoalPerformance {
+  platform: string;
+  content_goal: string;
+  sample_size: number;
+  avg_impressions: number | null;
+  avg_likes: number | null;
+  avg_comments: number | null;
+  avg_shares: number | null;
+  avg_saves: number | null;
+  avg_dm_count: number | null;
+  avg_new_followers: number | null;
+}
+
+/**
+ * 平台效率对比：按"平台 × 内容目标"交叉分组，回答"同样类型的内容，发在不同
+ * 平台上效果差多少"——这跟 getContentGoalPerformance(只按内容目标分组，不分平台)
+ * 是两个不同的切面。样本数(sample_size)会一起返回，前端据此判断是不是"一两条数据
+ * 就敢下结论"，样本太少时应该提示"仅供参考"而不是当成可靠结论展示。
+ */
+export function getPlatformGoalPerformance(): PlatformGoalPerformance[] {
+  const rows = db
+    .prepare(
+      `SELECT
+         platform,
+         content_goal,
+         COUNT(*) AS sample_size,
+         AVG(impressions) AS avg_impressions,
+         AVG(likes) AS avg_likes,
+         AVG(comments) AS avg_comments,
+         AVG(shares) AS avg_shares,
+         AVG(saves) AS avg_saves,
+         AVG(dm_count) AS avg_dm_count,
+         AVG(new_followers) AS avg_new_followers
+       FROM contents
+       WHERE metrics_captured_at IS NOT NULL AND content_goal IS NOT NULL
+       GROUP BY platform, content_goal
+       ORDER BY platform, content_goal`,
+    )
+    .all() as PlatformGoalPerformance[];
+
+  const round = (n: number | null) => (n === null ? null : Math.round(n));
+
+  return rows.map((r) => ({
+    ...r,
+    avg_impressions: round(r.avg_impressions),
+    avg_likes: round(r.avg_likes),
+    avg_comments: round(r.avg_comments),
+    avg_shares: round(r.avg_shares),
+    avg_saves: round(r.avg_saves),
     avg_dm_count: round(r.avg_dm_count),
     avg_new_followers: round(r.avg_new_followers),
   }));
@@ -127,6 +183,7 @@ export function getPublishRhythm(): PublishRhythm[] {
 export interface DashboardStats {
   blocked_summary: BlockedSummary;
   content_goal_performance: ContentGoalPerformance[];
+  platform_goal_performance: PlatformGoalPerformance[];
   avg_review_rounds: number | null;
   reject_reason_distribution: RejectReasonCount[];
   publish_rhythm: PublishRhythm[];
@@ -136,6 +193,7 @@ export function getDashboardStats(): DashboardStats {
   return {
     blocked_summary: getBlockedSummary(),
     content_goal_performance: getContentGoalPerformance(),
+    platform_goal_performance: getPlatformGoalPerformance(),
     avg_review_rounds: getAvgReviewRounds(),
     reject_reason_distribution: getRejectReasonDistribution(),
     publish_rhythm: getPublishRhythm(),

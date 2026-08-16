@@ -317,6 +317,18 @@ body {
   font-weight: 600;
 }
 
+/* 样本量不足提示 */
+.row-low-sample {
+  background: #fffbeb;
+}
+
+.sample-warning {
+  display: block;
+  color: #b45309;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
 .btn-link {
   background: none;
   border: none;
