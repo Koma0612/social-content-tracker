@@ -15,7 +15,7 @@ import {
   ReviewResult,
   RejectReason,
 } from '../types';
-import { getStatusOptions, getRollbackOptions } from '../utils/statusRules';
+import { getStatusOptions, getRollbackOptions, getStatusPillClass } from '../utils/statusRules';
 import { REVIEWER_ROLES, REJECT_REASONS, REVIEWABLE_STATUSES } from '../constants/options';
 
 interface ContentDetailPageProps {
@@ -249,7 +249,7 @@ export default function ContentDetailPage({ contentId, onBack }: ContentDetailPa
 
       <div className="detail-header">
         <h2>{content.topic}</h2>
-        <span className={content.is_blocked ? 'status-pill status-pill-blocked' : 'status-pill'}>
+        <span className={getStatusPillClass(content.current_status, content.is_blocked)}>
           {content.current_status} · 已停留 {content.blocked_days} 天
           {content.is_blocked ? '（阻塞）' : ''}
         </span>

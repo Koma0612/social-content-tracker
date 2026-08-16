@@ -28,7 +28,11 @@ type SubmitState =
   | { status: 'success'; id: number }
   | { status: 'error'; message: string };
 
-export default function ContentFormPage() {
+interface ContentFormPageProps {
+  onSwitchToImport: () => void;
+}
+
+export default function ContentFormPage({ onSwitchToImport }: ContentFormPageProps) {
   const [form, setForm] = useState<CreateContentInput>(EMPTY_FORM);
   const [submitState, setSubmitState] = useState<SubmitState>({ status: 'idle' });
 
@@ -63,7 +67,12 @@ export default function ContentFormPage() {
 
   return (
     <div className="form-page">
-      <h2>录入内容</h2>
+      <div className="list-page-header">
+        <h2>录入内容</h2>
+        <button type="button" className="btn-secondary" onClick={onSwitchToImport}>
+          批量导入 CSV
+        </button>
+      </div>
       <p className="hint">
         先填计划阶段的基本信息，制作阶段（文案、素材）也可以先留空，后面再补。
       </p>

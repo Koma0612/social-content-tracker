@@ -43,3 +43,13 @@ export function getRollbackOptions(current: ContentStatus): StatusOption[] {
   if (current !== '审核') return [];
   return getStatusOptions(current).filter((opt) => opt.type === '审核回退');
 }
+
+/**
+ * 状态标签的样式类名：阻塞用警示色、已发布用成功色，其余状态保持中性灰——
+ * 颜色只用在真正需要提醒的地方，不是每个状态都上色。
+ */
+export function getStatusPillClass(status: ContentStatus, isBlocked: boolean): string {
+  if (isBlocked) return 'status-pill status-pill-blocked';
+  if (status === '发布') return 'status-pill status-pill-published';
+  return 'status-pill';
+}

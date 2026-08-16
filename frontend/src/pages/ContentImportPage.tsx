@@ -44,7 +44,11 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   return btoa(binary);
 }
 
-export default function ContentImportPage() {
+interface ContentImportPageProps {
+  onSwitchToManual: () => void;
+}
+
+export default function ContentImportPage({ onSwitchToManual }: ContentImportPageProps) {
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<ArrayBuffer | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -94,7 +98,12 @@ export default function ContentImportPage() {
 
   return (
     <div className="import-page">
-      <h2>批量导入内容</h2>
+      <div className="list-page-header">
+        <h2>批量导入内容</h2>
+        <button type="button" className="btn-secondary" onClick={onSwitchToManual}>
+          ← 返回手动录入
+        </button>
+      </div>
       <p className="hint">
         先下载模板，在 Excel 里按模板格式填好数据、另存为 CSV，再上传导入。只支持导入计划阶段的字段(选题、平台等)，审核记录和发布后的复盘数据不支持批量导入。
       </p>

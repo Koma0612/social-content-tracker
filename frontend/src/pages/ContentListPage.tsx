@@ -3,6 +3,7 @@ import { fetchContents, ContentFilter } from '../api/client';
 import { ContentWithBlockInfo } from '../types';
 import FilterBar from '../components/FilterBar';
 import { buildCsvContent, downloadCsv } from '../utils/csv';
+import { getStatusPillClass } from '../utils/statusRules';
 
 const EXPORT_HEADERS = [
   '选题',
@@ -135,7 +136,9 @@ export default function ContentListPage({ onSelectContent }: ContentListPageProp
                   <td>{c.topic}</td>
                   <td>{c.platform}</td>
                   <td>
-                    <span className="status-pill">{c.current_status}</span>
+                    <span className={getStatusPillClass(c.current_status, c.is_blocked)}>
+                      {c.current_status}
+                    </span>
                   </td>
                   <td>
                     {c.is_blocked ? (
