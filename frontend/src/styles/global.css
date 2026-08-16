@@ -378,6 +378,15 @@ body {
   min-width: 140px;
 }
 
+.filter-blocked-toggle {
+  white-space: nowrap;
+}
+
+.filter-blocked-toggle input[type='checkbox'] {
+  min-width: auto;
+  width: auto;
+}
+
 .table-wrap {
   overflow-x: auto;
 }

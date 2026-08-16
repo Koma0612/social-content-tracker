@@ -36,6 +36,11 @@ export default function ContentListPage({ onSelectContent }: ContentListPageProp
   const [contents, setContents] = useState<ContentWithBlockInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // "是否阻塞"不是数据库字段，是查询那一刻现算出来的(is_blocked)，已经跟着
+  // 每条记录一起返回了，所以这个筛选直接在前端已拉取到的结果上过滤即可，
+  // 不需要为此再单独请求一次后端接口。
+  const [onlyBlocked, setOnlyBlocked] = useState(false);
+  const displayedContents = onlyBlocked ? contents.filter((c) => c.is_blocked) : contents;
 
   async function load(nextFilter: ContentFilter) {
     setLoading(true);
@@ -62,11 +67,12 @@ export default function ContentListPage({ onSelectContent }: ContentListPageProp
 
   function handleReset() {
     setFilter({});
+    setOnlyBlocked(false);
     load({});
   }
 
   function handleExport() {
-    const rows = contents.map((c) => [
+    const rows = displayedContents.map((c) => [
       c.topic,
       c.platform,
       c.current_status,
@@ -100,22 +106,31 @@ export default function ContentListPage({ onSelectContent }: ContentListPageProp
           type="button"
           className="btn-secondary"
           onClick={handleExport}
-          disabled={contents.length === 0}
+          disabled={displayedContents.length === 0}
         >
           导出 CSV
         </button>
       </div>
 
-      <FilterBar value={filter} onChange={setFilter} onApply={handleApply} onReset={handleReset} />
+      <FilterBar
+        value={filter}
+        onChange={setFilter}
+        onApply={handleApply}
+        onReset={handleReset}
+        onlyBlocked={onlyBlocked}
+        onToggleOnlyBlocked={setOnlyBlocked}
+      />
 
       {loading && <p className="hint">加载中…</p>}
       {error && <div className="banner banner-error">{error}</div>}
 
-      {!loading && !error && contents.length === 0 && (
-        <p className="hint">没有符合条件的内容。</p>
+      {!loading && !error && displayedContents.length === 0 && (
+        <p className="hint">
+          {onlyBlocked ? '当前筛选条件下没有阻塞的内容。' : '没有符合条件的内容。'}
+        </p>
       )}
 
-      {!loading && !error && contents.length > 0 && (
+      {!loading && !error && displayedContents.length > 0 && (
         <div className="table-wrap">
           <table className="content-table">
             <thead>
@@ -131,7 +146,7 @@ export default function ContentListPage({ onSelectContent }: ContentListPageProp
               </tr>
             </thead>
             <tbody>
-              {contents.map((c) => (
+              {displayedContents.map((c) => (
                 <tr key={c.id} className={c.is_blocked ? 'row-blocked' : undefined}>
                   <td>{c.topic}</td>
                   <td>{c.platform}</td>

@@ -6,9 +6,18 @@ interface FilterBarProps {
   onChange: (next: ContentFilter) => void;
   onApply: () => void;
   onReset: () => void;
+  onlyBlocked: boolean;
+  onToggleOnlyBlocked: (next: boolean) => void;
 }
 
-export default function FilterBar({ value, onChange, onApply, onReset }: FilterBarProps) {
+export default function FilterBar({
+  value,
+  onChange,
+  onApply,
+  onReset,
+  onlyBlocked,
+  onToggleOnlyBlocked,
+}: FilterBarProps) {
   return (
     <div className="filter-bar">
       <select
@@ -53,6 +62,15 @@ export default function FilterBar({ value, onChange, onApply, onReset }: FilterB
         value={value.owner ?? ''}
         onChange={(e) => onChange({ ...value, owner: e.target.value })}
       />
+
+      <label className="checkbox-item filter-blocked-toggle">
+        <input
+          type="checkbox"
+          checked={onlyBlocked}
+          onChange={(e) => onToggleOnlyBlocked(e.target.checked)}
+        />
+        只看阻塞内容
+      </label>
 
       <button type="button" className="btn-primary" onClick={onApply}>
         筛选
